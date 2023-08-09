@@ -1,13 +1,16 @@
-import express, { Request, Response } from 'express';
+import bodyParser from 'body-parser';
+import express from 'express';
 import sequelize from './dbConfig/config';
+import Routes from "./routes";
+
+
 const app = express();
-
-
 const port = 8000;
 
-app.get('/hi',(req: Request, res: Response)=>{
-    res.send("hello")
-})
+app.use(bodyParser.json());
+
+
+new Routes(app)
 
 sequelize.sync().then(() => {
     app.listen(port, () => {
