@@ -28,7 +28,6 @@ class ContactRepository {
                     let byPhoneNumber = yield Contact_1.default.findOne({
                         where: { phoneNumber }
                     });
-                    console.log(byEmail === null || byEmail === void 0 ? void 0 : byEmail.linkPrecedence, byPhoneNumber === null || byPhoneNumber === void 0 ? void 0 : byPhoneNumber.linkPrecedence, "phone number and email");
                     if ((byEmail === null || byEmail === void 0 ? void 0 : byEmail.linkPrecedence) === 'primary' && (byPhoneNumber === null || byPhoneNumber === void 0 ? void 0 : byPhoneNumber.linkPrecedence) === 'primary') {
                         console.log("entred in");
                         const setSecondary = yield Contact_1.default.update({
@@ -38,7 +37,7 @@ class ContactRepository {
                         const idToUpdate = yield Contact_1.default.findAll({ where: { linkedId: byPhoneNumber === null || byPhoneNumber === void 0 ? void 0 : byPhoneNumber.dataValues.id } });
                         const updateId = idToUpdate.map(up => up.id);
                         yield Contact_1.default.update({ linkedId: byEmail === null || byEmail === void 0 ? void 0 : byEmail.dataValues.id }, { where: { id: updateId } });
-                        return (0, helper_1.helper)(byEmail === null || byEmail === void 0 ? void 0 : byEmail.dataValues.id);
+                        return (0, helper_1.formateData)(byEmail === null || byEmail === void 0 ? void 0 : byEmail.dataValues.id);
                     }
                 }
                 let contacts = yield Contact_1.default.findAll({
@@ -79,7 +78,7 @@ class ContactRepository {
                     const isNumber = yield Contact_1.default.findOne({ where: { phoneNumber } });
                     if (isEmail && isNumber) {
                         console.log("from eisting one");
-                        return (0, helper_1.helper)(contactId);
+                        return (0, helper_1.formateData)(contactId);
                     }
                     console.log("from eisting 2");
                     const newContact = yield Contact_1.default.create({
@@ -89,7 +88,7 @@ class ContactRepository {
                         linkedId: contactId
                     });
                 }
-                return (0, helper_1.helper)(contactId);
+                return (0, helper_1.formateData)(contactId);
             }
             catch (err) {
                 return err;
