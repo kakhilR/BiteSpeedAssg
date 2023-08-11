@@ -8,12 +8,9 @@
     "dev": "node ./dist/index.js",
     "start": "tsc && npm run dev"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kakhilR/BiteSpeedAssg.git"
-  },
+  "repository": "git+https://github.com/kakhilR/BiteSpeedAssg.git",
   "keywords": [],
-  "author": "",
+  "author": "kakhilR <akhilkarenae@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/kakhilR/BiteSpeedAssg/issues"
