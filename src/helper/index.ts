@@ -1,7 +1,8 @@
 import Contact from "../models/Contact";
 
 export const formateData = async (primaryContactId:any) =>{
-    const primaryData:any = await Contact.findOne({where:{id:primaryContactId}})
+    try{
+        const primaryData:any = await Contact.findOne({where:{id:primaryContactId}})
     const data = await Contact.findAll({where:{linkedId:primaryContactId}})
     console.log(primaryData," primary data")
     let existingEmails = data.map(_contact => _contact.email)
@@ -26,4 +27,8 @@ export const formateData = async (primaryContactId:any) =>{
             secondaryContactIds: [secondaryIds],
         },
     });
+    }catch(err){
+        return {message:"something went wrong"}
+    }
+    
 }
