@@ -12,7 +12,7 @@ console.log(dbHost,"process.env.DB_NAME")
 console.log(dbPassword,"process.env.DB_NAME")
 
 const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
-  host: 'localhost',
+  host: dbHost,
   dialect: 'mysql',
 });
 
