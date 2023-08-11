@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
+const helper_1 = require("../helper");
 const Contact_1 = __importDefault(require("../models/Contact"));
 class ContactRepository {
     contactInfo(contact) {
@@ -20,14 +21,35 @@ class ContactRepository {
             const { email, phoneNumber } = contact;
             console.log(email, phoneNumber, "email and password");
             try {
-                const contacts = yield Contact_1.default.findAll({
+                if ((email !== null && email !== "") && (phoneNumber !== null && phoneNumber !== "")) {
+                    let byEmail = yield Contact_1.default.findOne({
+                        where: { email }
+                    });
+                    let byPhoneNumber = yield Contact_1.default.findOne({
+                        where: { phoneNumber }
+                    });
+                    console.log(byEmail === null || byEmail === void 0 ? void 0 : byEmail.linkPrecedence, byPhoneNumber === null || byPhoneNumber === void 0 ? void 0 : byPhoneNumber.linkPrecedence, "phone number and email");
+                    if ((byEmail === null || byEmail === void 0 ? void 0 : byEmail.linkPrecedence) === 'primary' && (byPhoneNumber === null || byPhoneNumber === void 0 ? void 0 : byPhoneNumber.linkPrecedence) === 'primary') {
+                        console.log("entred in");
+                        const setSecondary = yield Contact_1.default.update({
+                            linkedId: byEmail === null || byEmail === void 0 ? void 0 : byEmail.dataValues.id,
+                            linkPrecedence: 'secondary',
+                        }, { where: { id: byPhoneNumber.dataValues.id } });
+                        const idToUpdate = yield Contact_1.default.findAll({ where: { linkedId: byPhoneNumber === null || byPhoneNumber === void 0 ? void 0 : byPhoneNumber.dataValues.id } });
+                        const updateId = idToUpdate.map(up => up.id);
+                        yield Contact_1.default.update({ linkedId: byEmail === null || byEmail === void 0 ? void 0 : byEmail.dataValues.id }, { where: { id: updateId } });
+                        return (0, helper_1.helper)(byEmail === null || byEmail === void 0 ? void 0 : byEmail.dataValues.id);
+                    }
+                }
+                let contacts = yield Contact_1.default.findAll({
                     where: {
                         [sequelize_1.Op.or]: [{ email }, { phoneNumber }],
                     }
                 });
-                if (contacts.length === 0) {
+                console.log(contacts, "contacts");
+                if (contacts.length == 0 && (email !== null && email !== "") && (phoneNumber !== null && phoneNumber !== "")) {
                     // Creating a new primary contact
-                    console.log("from here");
+                    console.log("creating new contact");
                     const newPrimary = yield Contact_1.default.create({
                         email,
                         phoneNumber,
@@ -42,45 +64,32 @@ class ContactRepository {
                         },
                     });
                 }
-                console.log(contacts, "contacts");
-                let existingContactId;
-                let contact = {};
-                const existingContacts = contacts.find(contact => contact.linkPrecedence === 'primary');
-                console.log(existingContacts, "contatcs");
-                existingContactId = existingContacts.dataValues.id;
-                let existingEmails = contacts.map(_contact => _contact.email);
-                console.log(existingEmails, "eistigh mails");
-                let existingPhoneNumbers = contacts.map(_contact => _contact.phoneNumber);
-                const secondaryContacts = contacts.filter(_contact => _contact.linkPrecedence === 'secondary');
-                const secondaryIds = secondaryContacts.map(_contact => _contact.id);
-                let newEmail = null;
-                let newPhoneNumber = null;
-                if (email != null && !existingEmails.includes(email)) {
-                    newEmail = email;
-                    newPhoneNumber = phoneNumber;
+                const existingContacts = contacts.find(_contact => _contact.linkPrecedence === 'primary');
+                let contactId;
+                if (existingContacts) {
+                    contactId = existingContacts === null || existingContacts === void 0 ? void 0 : existingContacts.dataValues.id;
                 }
-                if (phoneNumber != null && !existingPhoneNumbers.includes(phoneNumber)) {
-                    newEmail = email;
-                    newPhoneNumber = phoneNumber;
+                else {
+                    const isEmail = yield Contact_1.default.findOne({ where: { email } });
+                    contactId = isEmail === null || isEmail === void 0 ? void 0 : isEmail.dataValues.linkedId;
                 }
-                if (newEmail !== null && newPhoneNumber !== null) {
-                    console.log("from eisting one");
+                console.log(contactId);
+                if ((email !== null && email !== "") && (phoneNumber !== null && phoneNumber !== "")) {
+                    const isEmail = yield Contact_1.default.findOne({ where: { email } });
+                    const isNumber = yield Contact_1.default.findOne({ where: { phoneNumber } });
+                    if (isEmail && isNumber) {
+                        console.log("from eisting one");
+                        return (0, helper_1.helper)(contactId);
+                    }
+                    console.log("from eisting 2");
                     const newContact = yield Contact_1.default.create({
-                        email: newEmail,
-                        phoneNumber: newPhoneNumber,
+                        email: email,
+                        phoneNumber: phoneNumber,
                         linkPrecedence: 'secondary',
-                        linkedId: existingContactId
+                        linkedId: contactId
                     });
-                    existingEmails.push(newEmail);
-                    existingPhoneNumbers.push(newPhoneNumber);
-                    console.log(newContact);
-                    //   secondaryIds.push()
                 }
-                contact.primaryContactId = existingContactId;
-                contact.emails = [existingEmails];
-                contact.phoneNumbers = [existingPhoneNumbers];
-                contact.secondaryContactIds = [secondaryIds];
-                return ({ contact });
+                return (0, helper_1.helper)(contactId);
             }
             catch (err) {
                 return err;

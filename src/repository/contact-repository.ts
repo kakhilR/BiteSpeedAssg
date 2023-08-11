@@ -1,30 +1,52 @@
 import { Op } from 'sequelize';
+import { formateData } from '../helper';
 import Contact from "../models/Contact";
-
-interface resultInterface{
-    primaryContactId: number,
-    emails:string[],
-    phoneNumbers:string[],
-    secondaryContactId:number[],
-}
 
 interface contactInterface {
     contactInfo(contacts : any): Promise<any>;
 }
+
 
 class ContactRepository implements contactInterface {
     async contactInfo(contact:any): Promise<any>{
         const { email, phoneNumber} = contact;
         console.log(email,phoneNumber,"email and password")
         try{
-            const contacts = await Contact.findAll({
+            if((email!==null && email!=="") && (phoneNumber!==null && phoneNumber!=="")){
+                let byEmail = await Contact.findOne({
+                    where: { email }
+                });
+
+                let byPhoneNumber = await Contact.findOne({
+                    where: { phoneNumber }
+                });
+
+                if(byEmail?.linkPrecedence==='primary' && byPhoneNumber?.linkPrecedence==='primary'){
+                    console.log("entred in")
+                    const setSecondary = await Contact.update({
+                            linkedId:byEmail?.dataValues.id,
+                            linkPrecedence: 'secondary',
+                        },
+                        {where:{id:byPhoneNumber.dataValues.id}}
+                    );
+                    const idToUpdate = await Contact.findAll({where:{linkedId:byPhoneNumber?.dataValues.id}})
+                    const updateId = idToUpdate.map(up=>up.id);
+                    await Contact.update({linkedId:byEmail?.dataValues.id},{where:{id:updateId}});
+
+                    return formateData(byEmail?.dataValues.id)
+                }
+            }
+            let contacts = await Contact.findAll({
                 where: {
                   [Op.or]: [{ email }, { phoneNumber }],
                 }
               });
-            if (contacts.length === 0) {
+
+              console.log(contacts,"contacts")
+
+            if (contacts.length==0 && (email!==null && email!=="") && (phoneNumber!==null && phoneNumber!=="")) {
             // Creating a new primary contact
-                console.log("from here")
+                console.log("creating new contact")
                 const newPrimary = await Contact.create({
                     email,
                     phoneNumber,
@@ -40,50 +62,34 @@ class ContactRepository implements contactInterface {
                     },
                 });
             }
-            console.log(contacts,"contacts")
-            let existingContactId;
-            let contact:any ={};
-            const existingContacts:any = contacts.find(contact => contact.linkPrecedence === 'primary');
-            console.log(existingContacts,"contatcs")
-            existingContactId = existingContacts.dataValues.id
-            let existingEmails = contacts.map(_contact => _contact.email);
-            console.log(existingEmails,"eistigh mails")
-            let existingPhoneNumbers = contacts.map(_contact => _contact.phoneNumber);
-            const secondaryContacts = contacts.filter(_contact => _contact.linkPrecedence === 'secondary')
-            const secondaryIds = secondaryContacts.map(_contact => _contact.id);
-            let newEmail:any=null;
-            let newPhoneNumber:any =null;
 
-            if(email!=null && !existingEmails.includes(email)){
-            newEmail = email;
-            newPhoneNumber=phoneNumber;
+            const existingContacts = contacts.find(_contact => _contact.linkPrecedence === 'primary');
+            let contactId;
+            if(existingContacts){
+                contactId = existingContacts?.dataValues.id
+            }else{
+                const isEmail =await Contact.findOne({where:{email}});
+                contactId = isEmail?.dataValues.linkedId;
             }
-    
-            if(phoneNumber!=null && !existingPhoneNumbers.includes(phoneNumber)){
-                newEmail = email;
-                newPhoneNumber = phoneNumber;
-            }
-    
-            if(newEmail!==null && newPhoneNumber!==null){
-                console.log("from eisting one")
+
+            console.log(contactId)
+            if((email!==null && email!=="") && (phoneNumber!== null && phoneNumber!=="")){
+                const isEmail =await Contact.findOne({where:{email}});
+                const isNumber =await Contact.findOne({where:{phoneNumber}})
+                if(isEmail && isNumber){
+                    console.log("from eisting one")
+                    return formateData(contactId)
+                }
+                console.log("from eisting 2")
                 const newContact = await Contact.create({
-                    email:newEmail,
-                    phoneNumber:newPhoneNumber,
+                    email:email,
+                    phoneNumber:phoneNumber,
                     linkPrecedence: 'secondary',
-                    linkedId: existingContactId
+                    linkedId: contactId
                   });
-                  existingEmails.push(newEmail);
-                  existingPhoneNumbers.push(newPhoneNumber);
-                  console.log(newContact)
-                //   secondaryIds.push()
             }
 
-            contact.primaryContactId = existingContactId;
-            contact.emails = [existingEmails];
-            contact.phoneNumbers = [existingPhoneNumbers];
-            contact.secondaryContactIds=[secondaryIds]
-
-            return ({contact})
+            return formateData(contactId)
         }catch(err){
             return err
         }

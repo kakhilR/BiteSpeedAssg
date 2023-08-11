@@ -13,8 +13,8 @@ Contact.init({
         autoIncrement: true,
         primaryKey: true,
     },
-    phoneNumber: sequelize_1.DataTypes.STRING,
-    email: sequelize_1.DataTypes.STRING,
+    phoneNumber: { type: sequelize_1.DataTypes.STRING, allowNull: false },
+    email: { type: sequelize_1.DataTypes.STRING, allowNull: false },
     linkedId: sequelize_1.DataTypes.INTEGER,
     linkPrecedence: sequelize_1.DataTypes.ENUM('primary', 'secondary'),
 }, {
