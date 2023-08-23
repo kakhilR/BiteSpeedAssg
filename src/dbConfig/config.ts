@@ -9,8 +9,9 @@ const dbPassword = process.env.DB_PASSWORD as string
 const dbPort = process.env.DB_PORT as unknown as number
 
 console.log(dbName,"process.env.DB_NAME")
-console.log(dbHost,"process.env.DB_NAME")
-console.log(dbPassword,"process.env.DB_NAME")
+console.log(dbHost,"process.env.DB_HOST")
+console.log(dbPassword,"process.env.DB_PASSWORD")
+console.log(dbPort,"process.env.DB_PORT")
 
 const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
