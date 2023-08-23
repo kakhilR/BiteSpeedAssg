@@ -5,15 +5,15 @@ import Routes from "./routes";
 
 
 const app = express();
-const port = 8000;
+const port = process.env.PORT ;
 
 app.use(bodyParser.json());
 
 
 new Routes(app)
 
-sequelize.sync().then(() => {
-    app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
-    });
-  });
+sequelize.sync();
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
