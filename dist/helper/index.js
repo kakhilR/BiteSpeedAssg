@@ -15,28 +15,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.formateData = void 0;
 const Contact_1 = __importDefault(require("../models/Contact"));
 const formateData = (primaryContactId) => __awaiter(void 0, void 0, void 0, function* () {
-    const primaryData = yield Contact_1.default.findOne({ where: { id: primaryContactId } });
-    const data = yield Contact_1.default.findAll({ where: { linkedId: primaryContactId } });
-    console.log(primaryData, " primary data");
-    let existingEmails = data.map(_contact => _contact.email);
-    let existingPhoneNumbers = data.map(_contact => _contact.phoneNumber);
-    const secondarydata = data.filter(_contact => _contact.linkPrecedence === 'secondary');
-    const secondaryIds = secondarydata.map(_contact => _contact.id);
-    existingEmails.push(primaryData === null || primaryData === void 0 ? void 0 : primaryData.dataValues.email);
-    existingPhoneNumbers.push(primaryData === null || primaryData === void 0 ? void 0 : primaryData.dataValues.phoneNumber);
-    existingEmails = existingEmails.filter((item, index, arr) => {
-        return arr.indexOf(item) === index;
-    });
-    existingPhoneNumbers = existingPhoneNumbers.filter((item, index, arr) => {
-        return arr.indexOf(item) === index;
-    });
-    return ({
-        contact: {
-            primaryContactId,
-            emails: [existingEmails],
-            phoneNumbers: [existingPhoneNumbers],
-            secondaryContactIds: [secondaryIds],
-        },
-    });
+    try {
+        const primaryData = yield Contact_1.default.findOne({ where: { id: primaryContactId } });
+        const data = yield Contact_1.default.findAll({ where: { linkedId: primaryContactId } });
+        console.log(primaryData, " primary data");
+        let existingEmails = data.map(_contact => _contact.email);
+        let existingPhoneNumbers = data.map(_contact => _contact.phoneNumber);
+        const secondarydata = data.filter(_contact => _contact.linkPrecedence === 'secondary');
+        const secondaryIds = secondarydata.map(_contact => _contact.id);
+        existingEmails.push(primaryData === null || primaryData === void 0 ? void 0 : primaryData.dataValues.email);
+        existingPhoneNumbers.push(primaryData === null || primaryData === void 0 ? void 0 : primaryData.dataValues.phoneNumber);
+        existingEmails = existingEmails.filter((item, index, arr) => {
+            return arr.indexOf(item) === index;
+        });
+        existingPhoneNumbers = existingPhoneNumbers.filter((item, index, arr) => {
+            return arr.indexOf(item) === index;
+        });
+        return ({
+            contact: {
+                primaryContactId,
+                emails: [existingEmails],
+                phoneNumbers: [existingPhoneNumbers],
+                secondaryContactIds: [secondaryIds],
+            },
+        });
+    }
+    catch (err) {
+        return { message: "something went wrong" };
+    }
 });
 exports.formateData = formateData;
